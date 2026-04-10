@@ -87,6 +87,16 @@ static void packet_receive_rate(int fd, std::string frame_id, double rate)
   char* w_buffer = buffer;
   char* buffer_end = &buffer[sizeof(buffer)];
 
+  // Start tcp stream
+  const char* watch_cmd = "?WATCH={\"enable\":true,\"raw\":1,\"nmea\":true}\n";
+
+  if (write(fd, watch_cmd, strlen(watch_cmd)) < 0)
+  {
+    perror("write");
+    close(fd);
+    return;
+  }
+
   while (rclcpp::ok())
   {
     errno = 0;
@@ -162,12 +172,21 @@ static void packet_receive_no_rate(int fd, std::string frame_id)
   nmea_msgs::msg::Sentence nmea_msg;
   nmea_msg.header.frame_id = frame_id.c_str();
 
-
   int rem;
   int ret;
   char buffer[2048];
   char* w_buffer = buffer;
   char* buffer_end = &buffer[sizeof(buffer)];
+
+  // Start tcp stream
+  const char* watch_cmd = "?WATCH={\"enable\":true,\"raw\":1,\"nmea\":true}\n";
+
+  if (write(fd, watch_cmd, strlen(watch_cmd)) < 0)
+  {
+    perror("write");
+    close(fd);
+    return;
+  }
 
   while (rclcpp::ok())
   {
@@ -235,7 +254,6 @@ static void packet_receive_no_rate(int fd, std::string frame_id)
     w_buffer = buffer + rem;
 
     rclcpp::spin_some(node);
-
   }
   close(fd);
 }
@@ -247,7 +265,7 @@ int main(int argc, char** argv)
   pub = node->create_publisher<nmea_msgs::msg::Sentence>("nmea_topic", 10);
 
   int sock;
-  int result,val;
+  int result, val;
 
   // Read parameters
   std::string address = "192.168.53.181";
@@ -286,8 +304,8 @@ int main(int argc, char** argv)
   rclcpp::Rate loop_rate(1.0);
   while (rclcpp::ok())
   {
-    result = connect(sock, (struct sockaddr *) &dstAddr, sizeof(dstAddr));
-    if( result < 0 )
+    result = connect(sock, (struct sockaddr*)&dstAddr, sizeof(dstAddr));
+    if (result < 0)
     {
       /* non-connect */
       RCLCPP_INFO(node->get_logger(), "CONNECT TRY... ");
@@ -302,11 +320,11 @@ int main(int argc, char** argv)
     loop_rate.sleep();
   }
 
-  if ((isConnected == true)&&(rclcpp::ok()))
+  if ((isConnected == true) && (rclcpp::ok()))
   {
-    if( rate != 0.0 )
+    if (rate != 0.0)
     {
-      /* non-block *//* ros::rate() */
+      /* non-block */ /* ros::rate() */
       val = 1;
       ioctl(sock, FIONBIO, &val);
       packet_receive_rate(sock, frame_id, rate);
@@ -316,7 +334,6 @@ int main(int argc, char** argv)
       /* block */
       packet_receive_no_rate(sock, frame_id);
     }
-
   }
 
   return 0;

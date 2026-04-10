@@ -3,5 +3,5 @@ nmea_tcp:
     address: "192.168.140.7"              # Destination IPAdress()
     port: 2947                            # Destination Port()
     nmea_topic: obu/nmea              # Publish NMEA topic name
-    frame_id: gnss_obu                     # NMEA topic frame_id
+    frame_id: gnss                     # NMEA topic frame_id
     rate: 0.0                              # watch receive buffer rate
